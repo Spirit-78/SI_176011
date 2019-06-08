@@ -95,6 +95,22 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color)
 	}
 }
 
+void rasterize(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int ybuffer[])
+{
+	if (p0.x > p1.x)
+		std::swap(p0, p1);
+	for (int x = p0.x; x <= p1.x; x++)
+	{
+		float t = (x - p0.x) / (float)(p1.x - p0.x);
+		int y = p0.y *(1. - t) + p1.y * t;
+		if (ybuffer[x] < y)
+		{
+			ybuffer[x] = y;
+			image.set(x, 0, color);
+		}
+	}
+}
+
 
 int main(int argc, char** argv)
 {
@@ -124,20 +140,15 @@ int main(int argc, char** argv)
 			triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
 		}
 	}
-//	for (int i = 0; i < model->nfaces(); i++)
-//	{
-//		std::vector<int> face = model->face(i);
-//		for (int j = 0; j < 3; j++)
-//		{
-//			Vec3f v0 = model->vert(face[j]);
-//			Vec3f v1 = model->vert(face[(j + 1) % 3]);
-//			int x0 = (v0.x + 1.)*width / 2.;
-//			int y0 = (v0.y + 1.)*height / 2.;
-//			int x1 = (v1.x + 1.)*width / 2.;
-//			int y1 = (v1.y + 1.)*height / 2.;
-//			line(x0, y0, x1, y1, image, white);
-//		}
-//	}
+
+	TGAImage render(width, 16, TGAImage::RGB);
+	int ybuffer[width];
+	for (int i = 0; i < width; i++)
+		ybuffer[i] = std::numeric_limits<int> ::min();
+	rasterize(Vec2i(20, 34), Vec2i(744, 400), render, red, ybuffer);
+	rasterize(Vec2i(120, 434), Vec2i(444, 400), render, green, ybuffer);
+	rasterize(Vec2i(330, 463), Vec2i(594, 200), render, blue, ybuffer);
+
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
 	delete model;
