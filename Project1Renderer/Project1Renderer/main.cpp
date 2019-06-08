@@ -41,9 +41,23 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 
 void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color)
 {
-	line(t0, t1, image, color);
-	line(t1, t2, image, color);
-	lime(t2, t0, image, color);
+	if (t0.y > t1.y)
+		std::swap(t0, t1);
+	if (t0.y > t2.y)
+		std::swap(t0, t2);
+	if (t1.y > t2.y)
+		std::swap(t1, t2);
+	int total_height = t2.y - t0.y;
+	for (int y = t0.y; y <= t1.y; y++)
+	{
+		int segment_height = t1.y - t0.y + 1;
+		float alpha = (float)(y - t0.y) / total_height;
+		float beta = (float)(y - t0.y) / segment_height; 
+		Vec2i A = t0 + (t2 - t0)*alpha;
+		Vec2i B = t0 + (t1 - t0)*beta;
+		image.set(A.x, y, red);
+		image.set(B.x, y, green);
+	}
 }
 
 
