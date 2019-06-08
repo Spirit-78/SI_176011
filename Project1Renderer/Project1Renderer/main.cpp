@@ -60,8 +60,23 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color)
 		float beta = (float)(y - t0.y) / segment_height; 
 		Vec2i A = t0 + (t2 - t0)*alpha;
 		Vec2i B = t0 + (t1 - t0)*beta;
-		image.set(A.x, y, red);
-		image.set(B.x, y, green);
+		if (A.x > B.x)
+			std::swap(A, B);
+		for (int j = A.x; j <= B.x; j++)
+			image.set(j, y, color);
+	}
+
+	for (int y = t1.y; y <= t2.y; y++)
+	{
+		int segment_height = t2.y - t1.y + 1;
+		float alpha = (float)(y - t0.y) / total_height;
+		float beta = (float)(y - t1.y) / segment_height;
+		Vec2i A = t0 + (t2 - t0)*alpha;
+		Vec2i B = t1 + (t2 - t1)*beta;
+		if (A.x > B.x) 
+			std::swap(A, B);
+		for (int j = A.x; j <= B.x; j++)
+			image.set(j, y, color); 
 	}
 }
 
