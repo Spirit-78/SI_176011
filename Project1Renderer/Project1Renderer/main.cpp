@@ -1,11 +1,23 @@
 #include "tgaimage.h"
 #include "geometry.h"
 #include "model.h"
+#include <vector>
+#include <iostream>
+#include <cmath>
 const TGAColor white = TGAColor(255,255,255,255);
 const TGAColor red = TGAColor(255,0,0,255);
 const TGAColor green = TGAColor(0, 255, 0, 255);
-const int width = 200;
-const int height = 200;
+const int width = 800;
+const int height = 800;
+Model *model = NULL;
+
+//Vec3f barycentric(Vec2i *pts, Vec2i P)
+//{
+//	Vec3f u = cross(Vec3f(pts[2][0] - pts[0][0], pts[1][0] - pts[0][0], pts[0][0] - P[0]), Vec3f(pts[2][1] - pts[0][1], pts[1][1] - pts[0][1], pts[0][1] - P[1]));
+//	if (std::abs(u[2]) < 1)
+//		return Vec3f(-1, 1, 1);
+//	return Vec3f(1.f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);
+//}
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 {
@@ -86,10 +98,32 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color)
 
 int main(int argc, char** argv)
 {
-	TGAImage image(100,100,TGAImage::RGB);
+	if (argc == 2)
+		model = new Model(argv[1]);
+	else
+		model = new Model("obj/african_head.obj");
+
+	TGAImage image(width,height,TGAImage::RGB);
 	image.set(52,42,red);
-	image.flip_vertically();
-	image.write_tga_file("output.tga");
+	Vec3f light_dir(0, 0, -1);
+
+
+	for (int i = 0; i < model->nfaces(); i++) {
+		std::vector<int> face = model->face(i);
+		Vec2i screen_coords[3];
+		Vec3f world_coords[3];
+		for (int j = 0; j < 3; j++) {
+			Vec3f v = model->vert(face[j]);
+			screen_coords[j] = Vec2i((v.x + 1.)*width / 2., (v.y + 1.)*height / 2.);
+			world_coords[j] = v;
+		}
+		Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
+		n.normalize();
+		float intensity = n * light_dir;
+		if (intensity > 0) {
+			triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
+		}
+	}
 //	for (int i = 0; i < model->nfaces(); i++)
 //	{
 //		std::vector<int> face = model->face(i);
@@ -104,5 +138,8 @@ int main(int argc, char** argv)
 //			line(x0, y0, x1, y1, image, white);
 //		}
 //	}
+	image.flip_vertically();
+	image.write_tga_file("output.tga");
+	delete model;
 	return 0;
 }
