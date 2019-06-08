@@ -45,5 +45,10 @@ int main(int argc, char** argv)
 	image.set(52,42,red);
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
+	for (int i = 0; i < model->nfaces(); i++)
+	{
+		std::vector<int> face = model->face(i);
+
+	}
 	return 0;
 }
