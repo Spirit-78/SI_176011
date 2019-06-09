@@ -4,10 +4,14 @@
 #include <iostream>
 #include "geometry.h"
 
-template <> template <> Vec3<int>::Vec3<>(const Vec3<float> &v) : x(int(v.x + .5)), y(int(v.y + .5)), z(int(v.z + .5)) {
-}
+template <> Vec3<float>::Vec3(Matrix m) : x(m[0][0] / m[3][0]), y(m[1][0] / m[3][0]), z(m[2][0] / m[3][0]) {}
+template <> template <> Vec3<int>::Vec3<>(const Vec3<float> &v) : x(int(v.x + .5)), y(int(v.y + .5)), z(int(v.z + .5)) {}
+template <> template <> Vec3<float>::Vec3<>(const Vec3<int> &v) : x(v.x), y(v.y), z(v.z) {}
 
-template <> template <> Vec3<float>::Vec3<>(const Vec3<int> &v) : x(v.x), y(v.y), z(v.z) {
+Matrix::Matrix(Vec3f v) : m(std::vector<std::vector<float> >(4, std::vector<float>(1, 1.f))), rows(4), cols(1) {
+	m[0][0] = v.x;
+	m[1][0] = v.y;
+	m[2][0] = v.z;
 }
 
 
@@ -60,16 +64,13 @@ Matrix Matrix::transpose() {
 
 Matrix Matrix::inverse() {
 	assert(rows == cols);
-	// augmenting the square matrix with the identity matrix of the same dimensions a => [ai]
 	Matrix result(rows, cols * 2);
 	for (int i = 0; i < rows; i++)
 		for (int j = 0; j < cols; j++)
 			result[i][j] = m[i][j];
 	for (int i = 0; i < rows; i++)
 		result[i][i + cols] = 1;
-	// first pass
 	for (int i = 0; i < rows - 1; i++) {
-		// normalize the first row
 		for (int j = result.cols - 1; j >= 0; j--)
 			result[i][j] /= result[i][i];
 		for (int k = i + 1; k < rows; k++) {
@@ -79,10 +80,8 @@ Matrix Matrix::inverse() {
 			}
 		}
 	}
-	// normalize the last row
 	for (int j = result.cols - 1; j >= rows - 1; j--)
 		result[rows - 1][j] /= result[rows - 1][rows - 1];
-	// second pass
 	for (int i = rows - 1; i > 0; i--) {
 		for (int k = i - 1; k >= 0; k--) {
 			float coeff = result[k][i];
@@ -91,7 +90,6 @@ Matrix Matrix::inverse() {
 			}
 		}
 	}
-	// cut the identity matrix back
 	Matrix truncate(rows, cols);
 	for (int i = 0; i < rows; i++)
 		for (int j = 0; j < cols; j++)
