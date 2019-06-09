@@ -86,6 +86,25 @@ struct Shader : public IShader {
 	}
 };
 
+struct DepthShader : public IShader {
+	mat<3, 3, float> varying_tri;
+
+	DepthShader() : varying_tri() {}
+
+	virtual Vec4f vertex(int iface, int nthvert) {
+		Vec4f gl_Vertex = embed<4>(model->vert(iface, nthvert)); // read the vertex from .obj file
+		gl_Vertex = Viewport * Projection*ModelView*gl_Vertex;          // transform it to screen coordinates
+		varying_tri.set_col(nthvert, proj<3>(gl_Vertex / gl_Vertex[3]));
+		return gl_Vertex;
+	}
+
+	virtual bool fragment(Vec3f bar, TGAColor &color) {
+		Vec3f p = varying_tri * bar;
+		color = TGAColor(255, 255, 255)*(p.z / depth);
+		return false;
+	}
+};
+
 
 int main(int argc, char** argv) {
 	if (2 > argc) {
