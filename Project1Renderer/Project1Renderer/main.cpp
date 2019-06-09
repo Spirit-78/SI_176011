@@ -47,6 +47,7 @@ Matrix viewport(int x, int y, int w, int h) {
 	return m;
 }
 
+
 Matrix lookat(Vec3f eye, Vec3f center, Vec3f up) {
 	Vec3f z = (eye - center).normalize();
 	Vec3f x = (up^z).normalize();
@@ -62,7 +63,7 @@ Matrix lookat(Vec3f eye, Vec3f center, Vec3f up) {
 }
 
 void triangle(Vec3i t0, Vec3i t1, Vec3i t2, float ity0, float ity1, float ity2, TGAImage &image, int *zbuffer) {
-	if (t0.y == t1.y && t0.y == t2.y) return; // i dont care about degenerate triangles
+	if (t0.y == t1.y && t0.y == t2.y) return; 
 	if (t0.y > t1.y) { std::swap(t0, t1); std::swap(ity0, ity1); }
 	if (t0.y > t2.y) { std::swap(t0, t2); std::swap(ity0, ity2); }
 	if (t1.y > t2.y) { std::swap(t1, t2); std::swap(ity1, ity2); }
@@ -72,7 +73,7 @@ void triangle(Vec3i t0, Vec3i t1, Vec3i t2, float ity0, float ity1, float ity2, 
 		bool second_half = i > t1.y - t0.y || t1.y == t0.y;
 		int segment_height = second_half ? t2.y - t1.y : t1.y - t0.y;
 		float alpha = (float)i / total_height;
-		float beta = (float)(i - (second_half ? t1.y - t0.y : 0)) / segment_height; // be careful: with above conditions no division by zero here
+		float beta = (float)(i - (second_half ? t1.y - t0.y : 0)) / segment_height;
 		Vec3i A = t0 + Vec3f(t2 - t0)*alpha;
 		Vec3i B = second_half ? t1 + Vec3f(t2 - t1)*beta : t0 + Vec3f(t1 - t0)*beta;
 		float ityA = ity0 + (ity2 - ity0)*alpha;
@@ -118,13 +119,14 @@ int main(int argc, char** argv) {
 			std::vector<int> face = model->face(i);
 			Vec3i screen_coords[3];
 			Vec3f world_coords[3];
+			float intensity[3];
 			for (int j = 0; j < 3; j++) {
 				Vec3f v = model->vert(face[j]);
 				screen_coords[j] = Vec3f(ViewPort*Projection*ModelView*Matrix(v));
 				world_coords[j] = v;
-				//intensity[j] = model->norm(i, j)*light_dir;
+				intensity[j] = model->norm(i, j)*light_dir;
 			}
-			//triangle(screen_coords[0], screen_coords[1], screen_coords[2], intensity[0], intensity[1], intensity[2], image, zbuffer);
+			triangle(screen_coords[0], screen_coords[1], screen_coords[2], intensity[0], intensity[1], intensity[2], image, zbuffer);
 		image.flip_vertically();
 		image.write_tga_file("output.tga");
 	}
