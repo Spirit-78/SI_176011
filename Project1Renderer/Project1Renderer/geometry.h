@@ -66,6 +66,8 @@ template <class t> std::ostream& operator<<(std::ostream& s, Vec3<t>& v) {
 	return s;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 const int DEFAULT_ALLOC = 4;
 
 class Matrix {
@@ -84,5 +86,8 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& s, Matrix& m);
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 
 #endif //__GEOMETRY_H__
