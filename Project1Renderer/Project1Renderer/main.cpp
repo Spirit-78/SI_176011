@@ -71,10 +71,23 @@ struct Shader : public IShader {
 
 	virtual bool fragment(Vec3f gl_FragCoord, Vec3f bar, TGAColor &color) {
 		Vec2f uv = varying_uv * bar;
-		if (std::abs(shadowbuffer[int(gl_FragCoord.x + gl_FragCoord.y*width)] - gl_FragCoord.z) < 1e-2) {
-			occl.set(uv.x * 1024, uv.y * 1024, TGAColor(255));
-		}
-		color = TGAColor(255, 0, 0);
+		int t = aoimage.get(uv.x * 1024, uv.y * 1024)[0];
+		color = TGAColor(t, t, t);
+		return false;
+	}
+};
+
+struct ZShader : public IShader {
+	mat<4, 3, float> varying_tri;
+
+	virtual Vec4f vertex(int iface, int nthvert) {
+		Vec4f gl_Vertex = Projection * ModelView*embed<4>(model->vert(iface, nthvert));
+		varying_tri.set_col(nthvert, gl_Vertex);
+		return gl_Vertex;
+	}
+
+	virtual bool fragment(Vec3f gl_FragCoord, Vec3f bar, TGAColor &color) {
+		color = TGAColor(0, 0, 0);
 		return false;
 	}
 };
