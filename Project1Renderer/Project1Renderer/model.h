@@ -1,7 +1,7 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
-#include <string>
 #include <vector>
+#include <string>
 #include "geometry.h"
 #include "tgaimage.h"
 
@@ -29,5 +29,4 @@ public:
 	float specular(Vec2f uv);
 	std::vector<int> face(int idx);
 };
-
 #endif

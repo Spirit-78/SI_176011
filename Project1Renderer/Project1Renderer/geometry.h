@@ -15,6 +15,8 @@ private:
 	T data_[DIM];
 };
 
+/////////////////////////////////////////////////////////////////////////////////
+
 template <typename T> struct vec<2, T> {
 	vec() : x(T()), y(T()) {}
 	vec(T X, T Y) : x(X), y(Y) {}
@@ -24,6 +26,8 @@ template <typename T> struct vec<2, T> {
 
 	T x, y;
 };
+
+/////////////////////////////////////////////////////////////////////////////////
 
 template <typename T> struct vec<3, T> {
 	vec() : x(T()), y(T()), z(T()) {}
@@ -36,6 +40,8 @@ template <typename T> struct vec<3, T> {
 
 	T x, y, z;
 };
+
+/////////////////////////////////////////////////////////////////////////////////
 
 template<size_t DIM, typename T> T operator*(const vec<DIM, T>& lhs, const vec<DIM, T>& rhs) {
 	T ret = T();
@@ -87,6 +93,8 @@ template <size_t DIM, typename T> std::ostream& operator<<(std::ostream& out, ve
 	return out;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+
 template<size_t DIM, typename T> struct dt {
 	static T det(const mat<DIM, DIM, T>& src) {
 		T ret = 0;
@@ -100,6 +108,8 @@ template<typename T> struct dt<1, T> {
 		return src[0][0];
 	}
 };
+
+/////////////////////////////////////////////////////////////////////////////////
 
 template<size_t DimRows, size_t DimCols, typename T> class mat {
 	vec<DimCols, T> rows[DimRows];
@@ -163,16 +173,18 @@ public:
 		return ret / tmp;
 	}
 
-	mat<DimCols, DimRows, T> invert() {
+	mat<DimRows, DimCols, T> invert() {
 		return invert_transpose().transpose();
 	}
 
 	mat<DimCols, DimRows, T> transpose() {
 		mat<DimCols, DimRows, T> ret;
-		for (size_t i = DimRows; i--; ret[i] = this->col(i));
+		for (size_t i = DimCols; i--; ret[i] = this->col(i));
 		return ret;
 	}
 };
+
+/////////////////////////////////////////////////////////////////////////////////
 
 template<size_t DimRows, size_t DimCols, typename T> vec<DimRows, T> operator*(const mat<DimRows, DimCols, T>& lhs, const vec<DimCols, T>& rhs) {
 	vec<DimRows, T> ret;
@@ -197,10 +209,12 @@ template <size_t DimRows, size_t DimCols, class T> std::ostream& operator<<(std:
 	return out;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+
 typedef vec<2, float> Vec2f;
 typedef vec<2, int>   Vec2i;
 typedef vec<3, float> Vec3f;
 typedef vec<3, int>   Vec3i;
 typedef vec<4, float> Vec4f;
 typedef mat<4, 4, float> Matrix;
-#endif
+#endif //__GEOMETRY_H__
