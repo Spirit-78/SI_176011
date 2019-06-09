@@ -82,9 +82,13 @@ struct Shader : public IShader {
 	Vec3f          varying_intensity; 
 	mat<2, 3, float> varying_uv;
 
+	mat<2, 3, float> varying_uv;  
+	mat<4, 4, float> uniform_M;  
+	mat<4, 4, float> uniform_MIT;
+
 	virtual Vec4f vertex(int iface, int nthvert) {
 		varying_uv.set_col(nthvert, model->uv(iface, nthvert));
-		varying_intensity[nthvert] = std::max(0.f, model->normal(iface, nthvert)*light_dir); 
+		//varying_intensity[nthvert] = std::max(0.f, model->normal(iface, nthvert)*light_dir); 
 		Vec4f gl_Vertex = embed<4>(model->vert(iface, nthvert)); 
 		return Viewport * Projection*ModelView*gl_Vertex; 
 	}
@@ -92,8 +96,17 @@ struct Shader : public IShader {
 	virtual bool fragment(Vec3f bar, TGAColor &color) {
 		float intensity = varying_intensity * bar;   
 		Vec2f uv = varying_uv * bar;      
-		color = model->diffuse(uv)*intensity; 
-		return false;                              
+		Vec3f n = proj<3>(uniform_MIT*embed<4>(model->normal(uv))).normalize();
+		Vec3f l = proj<3>(uniform_M  *embed<4>(light_dir)).normalize();
+		Vec3f r = (n*(n*l*2.f) - l).normalize(); 
+		float spec = pow(std::max(r.z, 0.0f), model->specular(uv));
+		float diff = std::max(0.f, n*l);
+		TGAColor c = model->diffuse(uv);
+		color = c;
+		for (int i = 0; i < 3; i++) 
+			color[i] = std::min<float>(5 + c[i] * (diff + .6*spec), 255);
+		return false;
+	                          
 	}
 };
 
