@@ -69,19 +69,12 @@ struct Shader : public IShader {
 		return gl_Vertex;
 	}
 
-	virtual bool fragment(Vec3f bar, TGAColor &color) {
-		Vec4f sb_p = uniform_Mshadow * embed<4>(varying_tri*bar); // corresponding point in the shadow buffer
-		sb_p = sb_p / sb_p[3];
-		int idx = int(sb_p[0]) + int(sb_p[1])*width; // index in the shadowbuffer array
-		float shadow = .3 + .7*(shadowbuffer[idx] < sb_p[2]); // magic coeff to avoid z-fighting
-		Vec2f uv = varying_uv * bar;                 // interpolate uv for the current pixel
-		Vec3f n = proj<3>(uniform_MIT*embed<4>(model->normal(uv))).normalize(); // normal
-		Vec3f l = proj<3>(uniform_M  *embed<4>(light_dir)).normalize(); // light vector
-		Vec3f r = (n*(n*l*2.f) - l).normalize();   // reflected light
-		float spec = pow(std::max(r.z, 0.0f), model->specular(uv));
-		float diff = std::max(0.f, n*l);
-		TGAColor c = model->diffuse(uv);
-		for (int i = 0; i < 3; i++) color[i] = std::min<float>(20 + c[i] * shadow*(1.2*diff + .6*spec), 255);
+	virtual bool fragment(Vec3f gl_FragCoord, Vec3f bar, TGAColor &color) {
+		Vec2f uv = varying_uv * bar;
+		if (std::abs(shadowbuffer[int(gl_FragCoord.x + gl_FragCoord.y*width)] - gl_FragCoord.z) < 1e-2) {
+			occl.set(uv.x * 1024, uv.y * 1024, TGAColor(255));
+		}
+		color = TGAColor(255, 0, 0);
 		return false;
 	}
 };
