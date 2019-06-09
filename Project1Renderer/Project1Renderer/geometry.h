@@ -100,6 +100,7 @@ template<typename T> struct dt<1, T> {
 		return src[0][0];
 	}
 };
+
 template<size_t DimRows, size_t DimCols, typename T> class mat {
 	vec<DimCols, T> rows[DimRows];
 public:
@@ -162,13 +163,13 @@ public:
 		return ret / tmp;
 	}
 
-	mat<DimRows, DimCols, T> invert() {
+	mat<DimCols, DimRows, T> invert() {
 		return invert_transpose().transpose();
 	}
 
 	mat<DimCols, DimRows, T> transpose() {
 		mat<DimCols, DimRows, T> ret;
-		for (size_t i = DimCols; i--; ret[i] = this->col(i));
+		for (size_t i = DimRows; i--; ret[i] = this->col(i));
 		return ret;
 	}
 };
