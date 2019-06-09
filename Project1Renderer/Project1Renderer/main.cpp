@@ -78,6 +78,25 @@ struct GouraudShader : public IShader {
 	}
 };
 
+struct Shader : public IShader {
+	Vec3f          varying_intensity; 
+	mat<2, 3, float> varying_uv;
+
+	virtual Vec4f vertex(int iface, int nthvert) {
+		varying_uv.set_col(nthvert, model->uv(iface, nthvert));
+		varying_intensity[nthvert] = std::max(0.f, model->normal(iface, nthvert)*light_dir); 
+		Vec4f gl_Vertex = embed<4>(model->vert(iface, nthvert)); 
+		return Viewport * Projection*ModelView*gl_Vertex; 
+	}
+
+	virtual bool fragment(Vec3f bar, TGAColor &color) {
+		float intensity = varying_intensity * bar;   
+		Vec2f uv = varying_uv * bar;      
+		color = model->diffuse(uv)*intensity; 
+		return false;                              
+	}
+};
+
 
 int main(int argc, char** argv) {
 	if (2 == argc) 
