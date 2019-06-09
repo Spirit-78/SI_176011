@@ -4,16 +4,10 @@
 #include <iostream>
 #include "geometry.h"
 
-template <> template <> Vec3<int>::Vec3<>(const Vec3<float> &v) : raw(), x(raw[0]), y(raw[1]), z(raw[2]) {
-	x = int(floor(v.x) + .5);
-	y = int(floor(v.y) + .5);
-	z = int(floor(v.z) + .5);
+template <> template <> Vec3<int>::Vec3<>(const Vec3<float> &v) : x(int(v.x + .5)), y(int(v.y + .5)), z(int(v.z + .5)) {
 }
 
-template <> template <> Vec3<float>::Vec3<>(const Vec3<int> &v) : raw(), x(raw[0]), y(raw[1]), z(raw[2]) {
-	x = v.x;
-	y = v.y;
-	z = v.z;
+template <> template <> Vec3<float>::Vec3<>(const Vec3<int> &v) : x(v.x), y(v.y), z(v.z) {
 }
 
 
@@ -66,7 +60,7 @@ Matrix Matrix::transpose() {
 
 Matrix Matrix::inverse() {
 	assert(rows == cols);
-	// augmenting the square matrix with the identity matrix of the same dimensions A => [AI]
+	// augmenting the square matrix with the identity matrix of the same dimensions a => [ai]
 	Matrix result(rows, cols * 2);
 	for (int i = 0; i < rows; i++)
 		for (int j = 0; j < cols; j++)
