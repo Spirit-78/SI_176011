@@ -1,6 +1,6 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
-
+#include <string>
 #include <vector>
 #include "geometry.h"
 #include "tgaimage.h"
@@ -30,4 +30,4 @@ public:
 	std::vector<int> face(int idx);
 };
 
-#endif //__MODEL_H__
+#endif

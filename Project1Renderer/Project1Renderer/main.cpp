@@ -29,33 +29,6 @@ Vec3f m2v(Matrix m) {
 	return Vec3f(m[0][0] / m[3][0], m[1][0] / m[3][0], m[2][0] / m[3][0]);
 }
 
-//Matrix viewport(int x, int y, int w, int h) {
-//	Matrix m = Matrix::identity(4);
-//	m[0][3] = x + w / 2.f;
-//	m[1][3] = y + h / 2.f;
-//	m[2][3] = depth / 2.f;
-
-//	m[0][0] = w / 2.f;
-//	m[1][1] = h / 2.f;
-//	m[2][2] = depth / 2.f;
-//	return m;
-//}
-
-
-//Matrix lookat(Vec3f eye, Vec3f center, Vec3f up) {
-//	Vec3f z = (eye - center).normalize();
-	//Vec3f x = (up^z).normalize();
-	//Vec3f y = (z^x).normalize();
-	//Matrix res = Matrix::identity(4);
-	//for (int i = 0; i < 3; i++) {
-	//	res[0][i] = x[i];
-	//	res[1][i] = y[i];
-	//	res[2][i] = z[i];
-	//	res[i][3] = -center[i];
-	//}
-	//return res;
-//}
-
 struct GouraudShader : public IShader {
 	Vec3f varying_intensity;
 
@@ -79,70 +52,57 @@ struct GouraudShader : public IShader {
 };
 
 struct Shader : public IShader {
-	Vec3f          varying_intensity; 
-	mat<2, 3, float> varying_uv;
-
-	mat<2, 3, float> varying_uv;  
-	mat<4, 4, float> uniform_M;  
-	mat<4, 4, float> uniform_MIT;
+	mat<2, 3, float> varying_uv; 
+	mat<3, 3, float> varying_nrm;
 
 	virtual Vec4f vertex(int iface, int nthvert) {
 		varying_uv.set_col(nthvert, model->uv(iface, nthvert));
-		//varying_intensity[nthvert] = std::max(0.f, model->normal(iface, nthvert)*light_dir); 
-		Vec4f gl_Vertex = embed<4>(model->vert(iface, nthvert)); 
-		return Viewport * Projection*ModelView*gl_Vertex; 
+		varying_nrm.set_col(nthvert, proj<3>((Projection*ModelView).invert_transpose()*embed<4>(model->normal(iface, nthvert), 0.f)));
+		Vec4f gl_Vertex = Projection * ModelView*embed<4>(model->vert(iface, nthvert));
+		varying_tri.set_col(nthvert, gl_Vertex);
+		return gl_Vertex;
 	}
 
 	virtual bool fragment(Vec3f bar, TGAColor &color) {
-		float intensity = varying_intensity * bar;   
-		Vec2f uv = varying_uv * bar;      
-		Vec3f n = proj<3>(uniform_MIT*embed<4>(model->normal(uv))).normalize();
-		Vec3f l = proj<3>(uniform_M  *embed<4>(light_dir)).normalize();
-		Vec3f r = (n*(n*l*2.f) - l).normalize(); 
-		float spec = pow(std::max(r.z, 0.0f), model->specular(uv));
-		float diff = std::max(0.f, n*l);
-		TGAColor c = model->diffuse(uv);
-		color = c;
-		for (int i = 0; i < 3; i++) 
-			color[i] = std::min<float>(5 + c[i] * (diff + .6*spec), 255);
+		Vec3f bn = (varying_nrm*bar).normalize();
+		Vec2f uv = varying_uv * bar;
+
+		float diff = std::max(0.f, bn*light_dir);
+		color = model->diffuse(uv)*diff;
 		return false;
-	                          
 	}
 };
 
 
 int main(int argc, char** argv) {
-	if (2 == argc) 
-		model = new Model(argv[1]);
-	else 
-		model = new Model("obj/african_head.obj");
+	if (2 > argc) {
+		std::cerr << "Usage: " << argv[0] << " obj/model.obj" << std::endl;
+		return 1;
+	}
 
-	zbuffer = new int[width*height];
-	for (int i = 0; i < width*height; i++)
-		zbuffer[i] = std::numeric_limits<int>::min();
+	float *zbuffer = new float[width*height];
+	for (int i = width * height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
 
+	TGAImage frame(width, height, TGAImage::RGB);
 	lookat(eye, center, up);
 	viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4);
 	projection(-1.f / (eye - center).norm());
-	light_dir.normalize();
+	light_dir = proj<3>((Projection*ModelView*embed<4>(light_dir, 0.f))).normalize();
 
-	TGAImage image(width, height, TGAImage::RGB);
-	TGAImage zbuffer(width, height, TGAImage::GRAYSCALE);
-
-	GouraudShader shader;
-	for (int i = 0; i < model->nfaces(); i++) {
-		Vec4f screen_coords[3];
-		for (int j = 0; j < 3; j++) {
-			screen_coords[j] = shader.vertex(i, j);
+	for (int m = 1; m < argc; m++) {
+		model = new Model(argv[m]);
+		Shader shader;
+		for (int i = 0; i < model->nfaces(); i++) {
+			for (int j = 0; j < 3; j++) {
+				shader.vertex(i, j);
+			}
+			triangle(shader.varying_tri, shader, frame, zbuffer);
 		}
-		triangle(screen_coords, shader, image, zbuffer);
+		delete model;
 	}
+	frame.flip_vertically(); // to place the origin in the bottom left corner of the image
+	frame.write_tga_file("framebuffer.tga");
 
-	image.flip_vertically(); // to place the origin in the bottom left corner of the image
-	zbuffer.flip_vertically();
-	image.write_tga_file("output.tga");
-	zbuffer.write_tga_file("zbuffer.tga");
-	delete model;
-	//delete[] zbuffer;
+	delete[] zbuffer;
 	return 0;
 }

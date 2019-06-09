@@ -1,3 +1,6 @@
+#ifndef __OUR_GL_H__
+#define __OUR_GL_H__
+
 #include "tgaimage.h"
 #include "geometry.h"
 
@@ -15,4 +18,5 @@ struct IShader
 	virtual Vec4f vertex(int iface, int nthvert) = 0;
 	virtual bool fragment(Vec3f bar, TGAColor &color) = 0;
 };
-void triangle(Vec4f *pts, IShader &shader, TGAImage &image, TGAImage &zbuffer);
+void triangle(mat<4, 3, float> &pts, IShader &shader, TGAImage &image, float *zbuffer);
+#endif

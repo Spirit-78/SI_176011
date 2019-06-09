@@ -3,13 +3,7 @@
 #include <cmath>
 #include <vector>
 #include <cassert>
-#include "geometry.h"
 #include <iostream>
-
-template <> template <> vec<3, int>  ::vec(const vec<3, float> &v) : x(int(v.x + .5f)), y(int(v.y + .5f)), z(int(v.z + .5f)) {}
-template <> template <> vec<3, float>::vec(const vec<3, int> &v) : x(v.x), y(v.y), z(v.z) {}
-template <> template <> vec<2, int>  ::vec(const vec<2, float> &v) : x(int(v.x + .5f)), y(int(v.y + .5f)) {}
-template <> template <> vec<2, float>::vec(const vec<2, int> &v) : x(v.x), y(v.y) {}
 
 template<size_t DimCols, size_t DimRows, typename T> class mat;
 
@@ -92,6 +86,7 @@ template <size_t DIM, typename T> std::ostream& operator<<(std::ostream& out, ve
 	}
 	return out;
 }
+
 template<size_t DIM, typename T> struct dt {
 	static T det(const mat<DIM, DIM, T>& src) {
 		T ret = 0;
@@ -105,7 +100,6 @@ template<typename T> struct dt<1, T> {
 		return src[0][0];
 	}
 };
-
 template<size_t DimRows, size_t DimCols, typename T> class mat {
 	vec<DimCols, T> rows[DimRows];
 public:
@@ -167,6 +161,16 @@ public:
 		T tmp = ret[0] * rows[0];
 		return ret / tmp;
 	}
+
+	mat<DimRows, DimCols, T> invert() {
+		return invert_transpose().transpose();
+	}
+
+	mat<DimCols, DimRows, T> transpose() {
+		mat<DimCols, DimRows, T> ret;
+		for (size_t i = DimCols; i--; ret[i] = this->col(i));
+		return ret;
+	}
 };
 
 template<size_t DimRows, size_t DimCols, typename T> vec<DimRows, T> operator*(const mat<DimRows, DimCols, T>& lhs, const vec<DimCols, T>& rhs) {
@@ -192,11 +196,10 @@ template <size_t DimRows, size_t DimCols, class T> std::ostream& operator<<(std:
 	return out;
 }
 
-
 typedef vec<2, float> Vec2f;
 typedef vec<2, int>   Vec2i;
 typedef vec<3, float> Vec3f;
 typedef vec<3, int>   Vec3i;
 typedef vec<4, float> Vec4f;
 typedef mat<4, 4, float> Matrix;
-#endif 
+#endif
